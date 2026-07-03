@@ -1,638 +1,691 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Search, Plus, Mic, Square, Printer, FileText, Clock, ChevronLeft,
+  Activity, Heart, Wind, Thermometer, Droplet, Weight, User, Phone,
+  Calendar, Lock, Unlock, FlaskConical, CheckCircle2, Circle, AlertTriangle,
+  Stethoscope, ClipboardList, Send, Pencil, ChevronRight, Users, Building2,
+  Hospital, ArrowRight, Pause, Save, ShieldCheck, History, Layers, Hash,
+} from "lucide-react";
 
-// ============================================================
-// LUXADMIN — Interactive Product Demo
-// This is the pitch. A fiduciary sees this and thinks:
-// "I need this yesterday."
-// ============================================================
+/* ============ DESIGN TOKENS ============ */
+const C = {
+  bg: "#070b0c", surface: "#10171a", surfaceHi: "#18242a", surfaceTop: "#1e2d34",
+  border: "#1d2b30", borderHi: "#274049",
+  teal: "#15b7a6", tealDim: "#0c7a6e", tealText: "#46d6c5",
+  glow: "rgba(21,183,166,0.16)",
+  text: "#e9eff1", dim: "#8ba0a7", faint: "#5b6e76",
+  amber: "#f5a524", red: "#f0524d", redBg: "rgba(240,82,77,0.12)",
+  blue: "#46a0ff", green: "#2dd06e", violet: "#a78bfa",
+};
+const FONT = "'Inter', -apple-system, system-ui, sans-serif";
 
-const DEMO_DATA = {
-  stats: {
-    totalEntities: 147,
-    activeEntities: 142,
-    overdue: 18,
-    dueSoon: 23,
-    onTrack: 101,
-    penaltyExposureCents: 1485000,
-    lninReadyPercent: 71,
-    lninBlockedEntities: 41,
-  },
-  entities: [
-    { id: 1, name: "Meridian Holdings S.A.", rcs: "B254321", type: "SA", status: "overdue", fyEnd: "31/12", nextDeadline: "Dépôt comptes annuels 2024", nextDeadlineDays: -245, penalty: 500, penaltyDaily: true, lninReady: false, lninTotal: 5, lninVerified: 3, assigned: "Ana S.", persons: [
-      { name: "Jean-Claude Müller", role: "Administrateur", lnin: "✓", nat: "LU" },
-      { name: "Sophie Laurent", role: "Administrateur", lnin: "⏳", nat: "FR" },
-      { name: "Klaus Bergmann", role: "Administrateur", lnin: "✓", nat: "DE" },
-      { name: "Nordic Capital AB", role: "Actionnaire (100%)", lnin: "—", nat: "SE" },
-      { name: "Maria Rossi", role: "Commissaire", lnin: "✗", nat: "IT" },
-    ]},
-    { id: 2, name: "Atlas Participations S.à r.l.", rcs: "B267890", type: "SARL", status: "overdue", fyEnd: "31/12", nextDeadline: "Dépôt comptes annuels 2024", nextDeadlineDays: -98, penalty: 200, penaltyDaily: false, lninReady: false, lninTotal: 3, lninVerified: 2, assigned: "Luc S.", persons: [
-      { name: "Ahmed El-Amine", role: "Gérant", lnin: "✗", nat: "MA" },
-      { name: "Olivier Fontaine", role: "Gérant", lnin: "✓", nat: "BE" },
-      { name: "Thames River Ltd", role: "Associé (100%)", lnin: "—", nat: "GB" },
-    ]},
-    { id: 3, name: "Vega Property S.A.", rcs: "B278901", type: "SA", status: "overdue", fyEnd: "30/06", nextDeadline: "Confirmation RBE 2025", nextDeadlineDays: -45, penalty: 0, penaltyDaily: false, lninReady: true, lninTotal: 4, lninVerified: 4, assigned: "Ana S.", persons: [
-      { name: "Christina Papadopoulos", role: "Administrateur", lnin: "✓", nat: "GR" },
-      { name: "Jean-Claude Müller", role: "Administrateur", lnin: "✓", nat: "LU" },
-      { name: "Olivier Fontaine", role: "Administrateur", lnin: "✓", nat: "BE" },
-      { name: "Nordic Capital AB", role: "Actionnaire (60%)", lnin: "—", nat: "SE" },
-    ]},
-    { id: 4, name: "Delta Capital S.à r.l.", rcs: "B289012", type: "SARL", status: "due_soon", fyEnd: "31/12", nextDeadline: "AGM 2025", nextDeadlineDays: 12, penalty: 0, penaltyDaily: false, lninReady: true, lninTotal: 2, lninVerified: 2, assigned: "Luc S.", persons: [
-      { name: "Klaus Bergmann", role: "Gérant", lnin: "✓", nat: "DE" },
-      { name: "Olivier Fontaine", role: "Gérant", lnin: "✓", nat: "BE" },
-    ]},
-    { id: 5, name: "Epsilon SPF", rcs: "B290123", type: "SPF", status: "due_soon", fyEnd: "31/12", nextDeadline: "Conseil de Gérance Q1 2026", nextDeadlineDays: 18, penalty: 0, penaltyDaily: false, lninReady: false, lninTotal: 2, lninVerified: 1, assigned: "Ana S.", persons: [
-      { name: "Yuki Tanaka", role: "Gérant", lnin: "✗", nat: "JP" },
-      { name: "Maria Rossi", role: "Actionnaire (50%)", lnin: "✗", nat: "IT" },
-    ]},
-    { id: 6, name: "Zeta Finance S.A.", rcs: "B301234", type: "SA", status: "on_track", fyEnd: "31/03", nextDeadline: "AGM 2025", nextDeadlineDays: 128, penalty: 0, penaltyDaily: false, lninReady: true, lninTotal: 3, lninVerified: 3, assigned: "Luc S.", persons: [
-      { name: "Olivier Fontaine", role: "Administrateur", lnin: "✓", nat: "BE" },
-      { name: "Klaus Bergmann", role: "Administrateur", lnin: "✓", nat: "DE" },
-      { name: "Zeta Investments Ltd", role: "Actionnaire (100%)", lnin: "—", nat: "GB" },
-    ]},
-    { id: 7, name: "Theta Real Estate S.A.", rcs: "B323456", type: "SA", status: "due_soon", fyEnd: "30/09", nextDeadline: "Conseil d'Administration Q1", nextDeadlineDays: 22, penalty: 0, penaltyDaily: false, lninReady: false, lninTotal: 3, lninVerified: 1, assigned: "Ana S.", persons: [
-      { name: "Christina Papadopoulos", role: "Administrateur", lnin: "✓", nat: "GR" },
-      { name: "Yuki Tanaka", role: "Administrateur", lnin: "✗", nat: "JP" },
-      { name: "Theta Holdings BV", role: "Actionnaire (100%)", lnin: "—", nat: "NL" },
-    ]},
-    { id: 8, name: "Lambda Group S.A.", rcs: "B345678", type: "SA", status: "overdue", fyEnd: "31/12", nextDeadline: "Dépôt comptes annuels 2024", nextDeadlineDays: -220, penalty: 500, penaltyDaily: true, lninReady: true, lninTotal: 4, lninVerified: 4, assigned: "Luc S.", persons: [
-      { name: "Jean-Claude Müller", role: "Administrateur", lnin: "✓", nat: "LU" },
-      { name: "Klaus Bergmann", role: "Administrateur", lnin: "✓", nat: "DE" },
-      { name: "Sophie Laurent", role: "Administrateur", lnin: "✓", nat: "FR" },
-      { name: "Lambda Capital LLC", role: "Actionnaire (100%)", lnin: "—", nat: "US" },
-    ]},
-    { id: 9, name: "Sigma Investments S.à r.l.", rcs: "B356789", type: "SARL", status: "on_track", fyEnd: "31/12", nextDeadline: "AGM 2025", nextDeadlineDays: 95, penalty: 0, penaltyDaily: false, lninReady: true, lninTotal: 2, lninVerified: 2, assigned: "Ana S.", persons: [
-      { name: "Ahmed El-Amine", role: "Gérant", lnin: "✓", nat: "MA" },
-      { name: "Sigma Partners SCA", role: "Associé (100%)", lnin: "—", nat: "LU" },
-    ]},
-    { id: 10, name: "Omega Wealth S.A.", rcs: "B367890", type: "SA", status: "on_track", fyEnd: "31/12", nextDeadline: "AGM 2025", nextDeadlineDays: 95, penalty: 0, penaltyDaily: false, lninReady: true, lninTotal: 3, lninVerified: 3, assigned: "Luc S.", persons: [
-      { name: "Jean-Claude Müller", role: "Administrateur", lnin: "✓", nat: "LU" },
-      { name: "Christina Papadopoulos", role: "Administrateur", lnin: "✓", nat: "GR" },
-      { name: "Omega Family Trust", role: "Actionnaire (100%)", lnin: "—", nat: "CH" },
-    ]},
-    { id: 11, name: "Phoenix Trading S.à r.l.", rcs: "B378901", type: "SARL", status: "on_track", fyEnd: "31/03", nextDeadline: "Dépôt comptes annuels 2025", nextDeadlineDays: 142, penalty: 0, penaltyDaily: false, lninReady: true, lninTotal: 2, lninVerified: 2, assigned: "Ana S.", persons: [
-      { name: "Olivier Fontaine", role: "Gérant", lnin: "✓", nat: "BE" },
-      { name: "Phoenix Group Holding BV", role: "Associé (100%)", lnin: "—", nat: "NL" },
-    ]},
-    { id: 12, name: "Nexus Holdings S.A.", rcs: "B389012", type: "SA", status: "due_soon", fyEnd: "31/12", nextDeadline: "Renouvellement domiciliation", nextDeadlineDays: 8, penalty: 0, penaltyDaily: false, lninReady: false, lninTotal: 5, lninVerified: 3, assigned: "Luc S.", persons: [
-      { name: "Klaus Bergmann", role: "Administrateur", lnin: "✓", nat: "DE" },
-      { name: "Maria Rossi", role: "Administrateur", lnin: "✗", nat: "IT" },
-      { name: "Sophie Laurent", role: "Administrateur", lnin: "✓", nat: "FR" },
-      { name: "Ahmed El-Amine", role: "Administrateur", lnin: "✗", nat: "MA" },
-      { name: "Nexus Capital Partners LP", role: "Actionnaire (100%)", lnin: "—", nat: "KY" },
-    ]},
+/* ============ MOCK DATA ============ */
+const VITALS_BLANK = { bp: "", hr: "", spo2: "", temp: "", rr: "", wt: "" };
+const QUEUE_SEED = [
+  { id: "u1", name: "Lakshmi Narayan", uhid: "APL-26-04821", age: 54, sex: "F", phone: "98450 11234", token: "A-12", arrivedMin: 22, dept: "General Medicine", reason: "DM follow-up", vitals: { bp: "148/92", hr: "84", spo2: "97", temp: "98.4", rr: "16", wt: "71" } },
+  { id: "u2", name: "Rahul Mehta", uhid: "APL-26-04822", age: 38, sex: "M", phone: "99860 55421", token: "A-13", arrivedMin: 14, dept: "General Medicine", reason: "Fever 3 days", vitals: { bp: "126/80", hr: "98", spo2: "98", temp: "101.2", rr: "18", wt: "78" } },
+  { id: "u3", name: "Fatima Bi", uhid: "APL-26-04823", age: 61, sex: "F", phone: "97400 99001", token: "A-14", arrivedMin: 6, dept: "General Medicine", reason: "BP review", vitals: { bp: "138/86", hr: "76", spo2: "99", temp: "98.1", rr: "15", wt: "64" } },
+];
+const TIMELINE = [
+  { date: "24 Jun 2026", dept: "General Medicine", doc: "Dr. K Karthik", dx: "T2DM — uncontrolled", locked: false, you: true },
+  { date: "02 Jun 2026", dept: "Cardiology", doc: "Dr. S Iyer", dx: "HTN, LVH on ECHO", locked: false },
+  { date: "18 May 2026", dept: "Psychiatry", doc: "Dr. A Rao", dx: "— restricted —", locked: true },
+  { date: "30 Apr 2026", dept: "Nephrology", doc: "Dr. M Banerjee", dx: "CKD stage 2", locked: false },
+];
+const LABS = [
+  { test: "HbA1c", val: "8.9", unit: "%", flag: "H", ref: "<5.7" },
+  { test: "Fasting glucose", val: "168", unit: "mg/dL", flag: "H", ref: "70–100" },
+  { test: "Creatinine", val: "1.1", unit: "mg/dL", flag: "", ref: "0.6–1.2" },
+  { test: "eGFR", val: "74", unit: "", flag: "L", ref: ">90" },
+  { test: "LDL", val: "142", unit: "mg/dL", flag: "H", ref: "<100" },
+];
+const SCRIBE_LINES = [
+  { who: "dr", t: "So the sugars have been running high again?" },
+  { who: "pt", t: "Yes doctor, especially fasting. And I feel very thirsty at night." },
+  { who: "dr", t: "Any tingling in the feet, any blurring of vision?" },
+  { who: "pt", t: "Some tingling in both feet since two weeks." },
+  { who: "dr", t: "Okay. Your HbA1c is 8.9 so we'll step up the metformin and add a second agent." },
+];
+const RX_DRAFT = {
+  cc: "Polyuria, nocturnal thirst, b/l foot paraesthesia × 2 weeks",
+  hpi: "Known T2DM × 6 yrs on Metformin 500 BD. Worsening glycaemic control, fasting hyperglycaemia. No chest pain, no vision changes.",
+  exam: "BP 148/92 · afebrile · feet: reduced monofilament sensation b/l · no ulcers",
+  dx: ["Type 2 Diabetes Mellitus — uncontrolled", "Early diabetic peripheral neuropathy"],
+  rx: [
+    { drug: "Tab. Glycomet GP 1", dose: "1 tab", freq: "BD", dur: "30 days", note: "before food" },
+    { drug: "Tab. Gabapentin 300mg", dose: "1 tab", freq: "HS", dur: "15 days", note: "" },
+    { drug: "Cap. Rosuvas 10", dose: "1 cap", freq: "HS", dur: "30 days", note: "" },
   ],
+  advice: ["HbA1c repeat in 3 months", "Diabetic diet, 30 min walk daily", "Daily foot inspection"],
 };
 
-const formatEur = (cents) => {
-  return new Intl.NumberFormat("fr-LU", { style: "currency", currency: "EUR" }).format(cents / 100);
-};
+/* ============ PRIMITIVES ============ */
+const Chip = ({ children, color = C.teal, bg, sm }) => (
+  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: sm ? 10 : 11.5, fontWeight: 600, padding: sm ? "2px 7px" : "3px 9px", borderRadius: 99, color, background: bg || `${color}1f`, letterSpacing: 0.2 }}>{children}</span>
+);
+const Btn = ({ children, onClick, primary, ghost, full, sm, icon: Icon, danger }) => (
+  <button onClick={onClick} style={{
+    display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+    width: full ? "100%" : "auto", padding: sm ? "8px 14px" : "13px 18px", borderRadius: 13,
+    fontSize: sm ? 13 : 14.5, fontWeight: 700, cursor: "pointer", fontFamily: FONT,
+    letterSpacing: 0.2, transition: "transform .12s, filter .12s",
+    color: primary ? "#04201d" : danger ? C.red : ghost ? C.dim : C.text,
+    background: primary ? `linear-gradient(180deg, ${C.teal}, ${C.tealDim})` : danger ? C.redBg : ghost ? "transparent" : C.surfaceHi,
+    border: ghost ? `1px solid ${C.border}` : "none",
+    boxShadow: primary ? `0 6px 22px ${C.glow}` : "none",
+  }}
+    onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
+    onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+    onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}>
+    {Icon && <Icon size={sm ? 15 : 18} strokeWidth={2.4} />}{children}
+  </button>
+);
+const Field = ({ label, value, onChange, ph, icon: Icon, w }) => (
+  <div style={{ flex: w || 1, minWidth: 0 }}>
+    {label && <div style={{ fontSize: 10.5, color: C.faint, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 5 }}>{label}</div>}
+    <div style={{ display: "flex", alignItems: "center", gap: 8, background: C.surfaceHi, border: `1px solid ${C.border}`, borderRadius: 11, padding: "10px 12px" }}>
+      {Icon && <Icon size={15} color={C.faint} strokeWidth={2.2} />}
+      <input value={value} onChange={(e) => onChange?.(e.target.value)} placeholder={ph} style={{ flex: 1, minWidth: 0, background: "none", border: "none", outline: "none", color: C.text, fontSize: 14, fontFamily: FONT }} />
+    </div>
+  </div>
+);
+const Sec = ({ children }) => <div style={{ fontSize: 11, color: C.faint, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1, margin: "4px 0 2px" }}>{children}</div>;
 
-// ============================================================
-// STATUS BADGE
-// ============================================================
-function StatusBadge({ status }) {
-  const config = {
-    overdue: { label: "En retard", bg: "#fee2e2", color: "#991b1b", dot: "#ef4444" },
-    due_soon: { label: "Échéance proche", bg: "#fef3c7", color: "#92400e", dot: "#f59e0b" },
-    on_track: { label: "En ordre", bg: "#d1fae5", color: "#065f46", dot: "#10b981" },
-  };
-  const c = config[status] || config.on_track;
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 10px", borderRadius: 99, background: c.bg, color: c.color, fontSize: 12, fontWeight: 600, letterSpacing: "0.01em", whiteSpace: "nowrap" }}>
-      <span style={{ width: 7, height: 7, borderRadius: "50%", background: c.dot, flexShrink: 0 }} />
-      {c.label}
-    </span>
-  );
-}
+/* ============ STATUS BAR + FRAMES ============ */
+const StatusBar = () => (
+  <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 20px 6px", fontSize: 13, color: C.text, fontWeight: 600 }}>
+    <span>10:15</span><span style={{ letterSpacing: 1 }}>5G ▪ 71%</span>
+  </div>
+);
+const PhoneFrame = ({ children }) => (
+  <div style={{ width: 380, background: C.bg, borderRadius: 30, border: `1px solid ${C.border}`, overflow: "hidden", display: "flex", flexDirection: "column", height: 760, boxShadow: "0 30px 80px rgba(0,0,0,0.5)" }}>
+    <StatusBar />
+    <div style={{ flex: 1, overflowY: "auto" }}>{children}</div>
+  </div>
+);
+const Desk = ({ children }) => (
+  <div style={{ width: 760, background: C.bg, borderRadius: 18, border: `1px solid ${C.border}`, overflow: "hidden", height: 760, boxShadow: "0 30px 80px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "13px 20px", borderBottom: `1px solid ${C.border}`, background: C.surface }}>
+      <div style={{ width: 26, height: 26, borderRadius: 7, background: `linear-gradient(135deg, ${C.teal}, ${C.tealDim})`, display: "grid", placeItems: "center" }}><Stethoscope size={15} color="#04201d" /></div>
+      <span style={{ fontWeight: 800, fontSize: 15 }}>LIET <span style={{ color: C.faint, fontWeight: 600 }}>· Front Desk</span></span>
+      <div style={{ marginLeft: "auto" }}><Chip color={C.green}><span style={{ width: 6, height: 6, borderRadius: 99, background: C.green }} />Online</Chip></div>
+    </div>
+    <div style={{ flex: 1, overflowY: "auto" }}>{children}</div>
+  </div>
+);
 
-// ============================================================
-// LNIN INDICATOR
-// ============================================================
-function LninBadge({ ready, total, verified }) {
-  if (total === 0) return <span style={{ color: "#9ca3af", fontSize: 13 }}>—</span>;
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 13, color: ready ? "#065f46" : "#991b1b", fontWeight: 500 }}>
-      <span style={{ fontSize: 11 }}>{ready ? "✓" : "⚠"}</span>
-      {verified}/{total}
-    </span>
-  );
-}
+const TopBar = ({ title, onBack, right }) => (
+  <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", borderBottom: `1px solid ${C.border}` }}>
+    {onBack && <button onClick={onBack} style={{ background: C.surfaceHi, border: `1px solid ${C.border}`, borderRadius: 10, padding: 7, cursor: "pointer", display: "grid", placeItems: "center" }}><ChevronLeft size={18} color={C.dim} /></button>}
+    <span style={{ fontSize: 17, fontWeight: 800, flex: 1 }}>{title}</span>{right}
+  </div>
+);
 
-// ============================================================
-// TYPE BADGE
-// ============================================================
-function TypeBadge({ type }) {
-  const colors = {
-    SA: { bg: "#ede9fe", color: "#5b21b6" },
-    SARL: { bg: "#dbeafe", color: "#1e40af" },
-    SPF: { bg: "#fce7f3", color: "#9d174d" },
-    SCSp: { bg: "#d1fae5", color: "#065f46" },
-  };
-  const c = colors[type] || { bg: "#f3f4f6", color: "#374151" };
-  return (
-    <span style={{ display: "inline-block", padding: "2px 8px", borderRadius: 4, background: c.bg, color: c.color, fontSize: 11, fontWeight: 700, letterSpacing: "0.05em" }}>
-      {type}
-    </span>
-  );
-}
+/* ============ WAIT TIMER (live, escalating) ============ */
+function useTicker() { const [, set] = useState(0); useEffect(() => { const i = setInterval(() => set((n) => n + 1), 1000); return () => clearInterval(i); }, []); }
+const waitColor = (m) => (m >= 20 ? C.red : m >= 10 ? C.amber : C.green);
 
-// ============================================================
-// STAT CARD
-// ============================================================
-function StatCard({ label, value, sub, color, icon, accent, delay }) {
-  const [visible, setVisible] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setVisible(true), delay || 0); return () => clearTimeout(t); }, []);
+/* ============ DOCTOR DASHBOARD ============ */
+function DoctorDash({ tier, today, queue, go }) {
+  useTicker();
+  const isSolo = tier === "solo";
   return (
-    <div style={{
-      background: accent ? `linear-gradient(135deg, ${accent} 0%, ${accent}dd 100%)` : "#fff",
-      borderRadius: 12,
-      padding: "20px 22px",
-      display: "flex",
-      flexDirection: "column",
-      gap: 6,
-      boxShadow: accent ? `0 4px 20px ${accent}33` : "0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)",
-      opacity: visible ? 1 : 0,
-      transform: visible ? "translateY(0)" : "translateY(12px)",
-      transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
-      minWidth: 0,
-    }}>
-      <div style={{ fontSize: 12, fontWeight: 500, color: accent ? "rgba(255,255,255,0.8)" : "#6b7280", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-        {label}
+    <div>
+      <div style={{ padding: "18px 20px 8px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <div style={{ fontSize: 23, fontWeight: 800 }}>Dr. K Karthik</div>
+            <div style={{ color: C.dim, fontSize: 13.5, marginTop: 2 }}>Wed, 24 June 2026 · General Medicine</div>
+          </div>
+          <Chip color={C.teal}><span style={{ width: 7, height: 7, borderRadius: 99, background: C.teal, boxShadow: `0 0 8px ${C.teal}` }} />LIVE</Chip>
+        </div>
       </div>
-      <div style={{ fontSize: 28, fontWeight: 800, color: accent ? "#fff" : (color || "#111827"), letterSpacing: "-0.02em", lineHeight: 1.1 }}>
-        {value}
+
+      <div style={{ padding: "8px 20px 0" }}>
+        <Field value="" onChange={() => {}} ph="Search patient name or phone…" icon={Search} />
+        <div style={{ height: 14 }} />
+        <Btn primary full icon={Plus} onClick={() => go(isSolo ? "capture" : "queue")}>
+          {isSolo ? "New Consultation" : "Walk-in Consultation"}
+        </Btn>
       </div>
-      {sub && (
-        <div style={{ fontSize: 12, color: accent ? "rgba(255,255,255,0.7)" : "#9ca3af", marginTop: 2 }}>
-          {sub}
+
+      {!isSolo && (
+        <div style={{ padding: "22px 20px 6px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <Sec>Live Queue ({queue.length})</Sec>
+            <span style={{ fontSize: 11.5, color: C.faint }}>tap a patient to scribe →</span>
+          </div>
+          {queue.map((p) => (
+            <button key={p.id} onClick={() => go(tier === "hospital" ? "timeline" : "scribe", p)} style={{ width: "100%", textAlign: "left", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: 14, marginBottom: 10, cursor: "pointer", display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 42, height: 42, borderRadius: 11, background: C.surfaceHi, display: "grid", placeItems: "center", fontWeight: 800, color: C.tealText, fontSize: 13 }}>{p.token}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>{p.name}</div>
+                <div style={{ color: C.dim, fontSize: 12.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.age}/{p.sex} · {p.reason}</div>
+              </div>
+              <Chip color={waitColor(p.arrivedMin)} sm><Clock size={11} />{p.arrivedMin}m</Chip>
+            </button>
+          ))}
         </div>
       )}
-    </div>
-  );
-}
 
-// ============================================================
-// DOCUMENT PREVIEW MODAL
-// ============================================================
-function DocumentModal({ entity, onClose }) {
-  const isSA = entity.type === "SA";
-  const boardName = isSA ? "Conseil d'Administration" : "Conseil de Gérance";
-  const memberTitle = isSA ? "administrateurs" : "gérants";
-
-  return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20 }} onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} style={{
-        background: "#fff", borderRadius: 16, width: "100%", maxWidth: 680, maxHeight: "85vh", overflow: "auto",
-        boxShadow: "0 25px 60px rgba(0,0,0,0.3)", animation: "modalIn 0.3s ease"
-      }}>
-        <div style={{ padding: "24px 28px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: "#10b981", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>⚡ Généré par IA — Prêt à réviser</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: "#111827" }}>Procès-Verbal du {boardName}</div>
+      <div style={{ padding: "22px 20px 30px" }}>
+        <Sec>Seen Today ({today.length})</Sec>
+        <div style={{ height: 10 }} />
+        {today.length === 0 ? (
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "34px 20px", textAlign: "center" }}>
+            <div style={{ color: C.dim, fontSize: 15, fontWeight: 600 }}>No consultations finalised yet.</div>
+            <div style={{ color: C.faint, fontSize: 13, marginTop: 4 }}>Finished notes appear here, ready to reprint.</div>
           </div>
-          <button onClick={onClose} style={{ background: "#f3f4f6", border: "none", borderRadius: 8, width: 36, height: 36, cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280" }}>×</button>
-        </div>
-        <div style={{ padding: "28px", fontFamily: "'Times New Roman', Georgia, serif", fontSize: 14.5, lineHeight: 1.75, color: "#1f2937" }}>
-          <div style={{ textAlign: "center", marginBottom: 28 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: "0.1em" }}>{entity.name}</div>
-            <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>{isSA ? "Société Anonyme" : entity.type === "SPF" ? "Société de Gestion de Patrimoine Familial" : "Société à Responsabilité Limitée"}</div>
-            <div style={{ fontSize: 12, color: "#6b7280" }}>RCS Luxembourg {entity.rcs}</div>
-            <div style={{ fontSize: 12, color: "#6b7280" }}>Siège social : 15, Boulevard Royal, L-2449 Luxembourg</div>
-            <div style={{ width: 60, height: 2, background: "#d1d5db", margin: "18px auto 0" }} />
-          </div>
-
-          <div style={{ textAlign: "center", fontWeight: 700, fontSize: 15, marginBottom: 20, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-            Procès-Verbal de la réunion du {boardName}
-          </div>
-          <div style={{ textAlign: "center", fontSize: 13, color: "#6b7280", marginBottom: 24 }}>
-            tenue au siège social en date du ______ 2026 à _____ heures
-          </div>
-
-          <p><strong>Sont présents :</strong></p>
-          {entity.persons && entity.persons.length > 0 ? (
-            <ul style={{ paddingLeft: 20, margin: "8px 0 16px" }}>
-              {entity.persons.filter(p => p.role.includes("dministrateur") || p.role.includes("érant")).map((p, i) => (
-                <li key={i} style={{ marginBottom: 4 }}>Monsieur/Madame <strong>{p.name}</strong>, {p.role}</li>
-              ))}
-            </ul>
-          ) : (
-            <p style={{ color: "#9ca3af", fontStyle: "italic" }}>[Liste des {memberTitle} présents]</p>
-          )}
-
-          <p>Le {boardName.toLowerCase()} se réunit conformément aux dispositions des statuts de la Société et de la loi modifiée du 10 août 1915 concernant les sociétés commerciales.</p>
-
-          <p>Le président constate que {isSA ? "la moitié au moins des administrateurs sont présents ou représentés" : "le quorum requis est atteint"} et que le {boardName.toLowerCase()} peut valablement délibérer sur les points portés à l'ordre du jour.</p>
-
-          <p style={{ fontWeight: 700, marginTop: 20 }}>ORDRE DU JOUR :</p>
-          <ol style={{ paddingLeft: 20 }}>
-            <li>Approbation des comptes annuels de l'exercice clos le {entity.fyEnd}/2025</li>
-            <li>Affectation du résultat</li>
-            <li>Décharge aux {memberTitle}</li>
-            <li>Divers</li>
-          </ol>
-
-          <p style={{ marginTop: 20 }}><strong>PREMIÈRE RÉSOLUTION</strong></p>
-          <p>Le {boardName.toLowerCase()}, après examen des comptes annuels de l'exercice social clos le {entity.fyEnd}/2025, décide de les approuver tels qu'ils lui ont été présentés, faisant apparaître un {isSA ? "bénéfice" : "résultat"} de _______ EUR.</p>
-
-          <p style={{ marginTop: 16 }}><strong>DEUXIÈME RÉSOLUTION</strong></p>
-          <p>Le {boardName.toLowerCase()} décide d'affecter le résultat de l'exercice comme suit :</p>
-          <ul style={{ paddingLeft: 20 }}>
-            <li>Dotation à la réserve légale : _______ EUR</li>
-            <li>Report à nouveau : _______ EUR</li>
-          </ul>
-
-          <p style={{ marginTop: 16 }}><strong>TROISIÈME RÉSOLUTION</strong></p>
-          <p>Le {boardName.toLowerCase()} décide d'accorder décharge pleine et entière aux {memberTitle} pour l'exercice de leur mandat au cours de l'exercice social écoulé.</p>
-
-          <div style={{ marginTop: 32, paddingTop: 20, borderTop: "1px solid #e5e7eb" }}>
-            <p>Plus rien ne figurant à l'ordre du jour, la séance est levée à _____ heures.</p>
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 32 }}>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ borderTop: "1px solid #9ca3af", width: 180, marginBottom: 4 }} />
-                <div style={{ fontSize: 12, color: "#6b7280" }}>Le Président</div>
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ borderTop: "1px solid #9ca3af", width: 180, marginBottom: 4 }} />
-                <div style={{ fontSize: 12, color: "#6b7280" }}>Le Secrétaire</div>
-              </div>
+        ) : today.map((p, i) => (
+          <button key={i} onClick={() => go("rx", p)} style={{ width: "100%", textAlign: "left", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: 13, marginBottom: 9, cursor: "pointer", display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: `${C.teal}1a`, display: "grid", placeItems: "center" }}><CheckCircle2 size={19} color={C.teal} /></div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: 14.5 }}>{p.name}</div>
+              <div style={{ color: C.dim, fontSize: 12.5 }}>{p.dx?.[0] || "Consultation complete"}</div>
             </div>
-          </div>
-
-          <div style={{ marginTop: 28, padding: "12px 16px", background: "#f0fdf4", borderRadius: 8, border: "1px solid #bbf7d0", fontSize: 12, color: "#166534" }}>
-            <strong>🤖 Note IA :</strong> Ce document a été généré automatiquement en respectant les exigences de la loi du 10 août 1915. 
-            {isSA ? " Le quorum de la moitié des administrateurs (art. 444-4) et la majorité simple (art. 444-5) sont respectés." : " Les règles de gérance des articles 710-1 et suivants sont respectées."}
-            {" "}Version française fait foi. À réviser par le collaborateur avant approbation.
-          </div>
-          <div style={{ marginTop: 10, padding: "8px 12px", background: "#f8fafc", borderRadius: 6, border: "1px solid #e2e8f0", fontSize: 11, color: "#64748b", textAlign: "center" }}>
-            Démonstration · Données fictives · Aucune valeur juridique
-          </div>
-        </div>
+            {p.draft ? <Chip color={C.amber} sm>Draft · awaiting labs</Chip> : <Printer size={17} color={C.faint} />}
+          </button>
+        ))}
       </div>
     </div>
   );
 }
 
-// ============================================================
-// ENTITY DETAIL PANEL
-// ============================================================
-function EntityDetail({ entity, onClose, onGenerate }) {
+/* ============ PATIENT CAPTURE (solo / new patient) ============ */
+function Capture({ go }) {
+  const [v, setV] = useState(VITALS_BLANK);
+  const [name, setName] = useState("");
+  const set = (k) => (val) => setV((p) => ({ ...p, [k]: val }));
+  const vit = [
+    { k: "bp", label: "BP", icon: Activity, ph: "120/80", suf: "mmHg" },
+    { k: "hr", label: "Pulse", icon: Heart, ph: "78", suf: "bpm" },
+    { k: "spo2", label: "SpO₂", icon: Droplet, ph: "98", suf: "%" },
+    { k: "temp", label: "Temp", icon: Thermometer, ph: "98.4", suf: "°F" },
+    { k: "rr", label: "Resp", icon: Wind, ph: "16", suf: "/min" },
+    { k: "wt", label: "Weight", icon: Weight, ph: "70", suf: "kg" },
+  ];
   return (
-    <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(520px, 90vw)", background: "#fff", boxShadow: "-8px 0 30px rgba(0,0,0,0.12)", zIndex: 900, display: "flex", flexDirection: "column", animation: "slideIn 0.25s ease" }}>
-      <div style={{ padding: "20px 24px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-            <TypeBadge type={entity.type} />
-            <StatusBadge status={entity.status} />
-          </div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: "#111827" }}>{entity.name}</div>
-          <div style={{ fontSize: 13, color: "#6b7280", marginTop: 2 }}>RCS Luxembourg {entity.rcs} · Clôture {entity.fyEnd}</div>
+    <div>
+      <TopBar title="New Consultation" onBack={() => go("dash")} />
+      <div style={{ padding: 18 }}>
+        <Sec>Patient</Sec>
+        <div style={{ height: 10 }} />
+        <div style={{ display: "flex", gap: 10 }}>
+          <Field label="Full name" value={name} onChange={setName} ph="e.g. Lakshmi Narayan" icon={User} />
         </div>
-        <button onClick={onClose} style={{ background: "#f3f4f6", border: "none", borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280", flexShrink: 0 }}>×</button>
-      </div>
-
-      <div style={{ flex: 1, overflow: "auto", padding: "20px 24px" }}>
-        {/* Penalty warning */}
-        {entity.penalty > 0 && (
-          <div style={{ padding: "14px 16px", background: entity.penaltyDaily ? "#fef2f2" : "#fffbeb", borderRadius: 10, border: `1px solid ${entity.penaltyDaily ? "#fecaca" : "#fde68a"}`, marginBottom: 20 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: entity.penaltyDaily ? "#991b1b" : "#92400e" }}>
-              {entity.penaltyDaily ? "⚠ RÉGIME PÉNALITÉS JOURNALIÈRES ACTIF" : "⚠ Majoration applicable"}
-            </div>
-            <div style={{ fontSize: 12, color: entity.penaltyDaily ? "#b91c1c" : "#a16207", marginTop: 4 }}>
-              {entity.penaltyDaily
-                ? `Retard supérieur à 7 mois. Majoration de €${entity.penalty} + pénalité journalière de €40/jour en cours. Exposition croissante.`
-                : `Retard de ${Math.abs(entity.nextDeadlineDays)} jours. Majoration actuelle : €${entity.penalty}. Risque d'escalade.`}
-            </div>
-          </div>
-        )}
-
-        {/* LNIN Status */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>Statut LNIN</div>
-          <div style={{ padding: "12px 16px", background: entity.lninReady ? "#f0fdf4" : "#fef2f2", borderRadius: 8, border: `1px solid ${entity.lninReady ? "#bbf7d0" : "#fecaca"}` }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 14, fontWeight: 600, color: entity.lninReady ? "#065f46" : "#991b1b" }}>
-                {entity.lninReady ? "✓ Prêt — Tous les LNIN vérifiés" : `⚠ ${entity.lninTotal - entity.lninVerified} LNIN manquant(s) — Dépôts bloqués`}
-              </span>
-              <span style={{ fontSize: 22, fontWeight: 800, color: entity.lninReady ? "#065f46" : "#dc2626" }}>
-                {entity.lninVerified}/{entity.lninTotal}
-              </span>
-            </div>
-            {!entity.lninReady && (
-              <div style={{ fontSize: 12, color: "#b91c1c", marginTop: 6 }}>
-                Depuis le 1er octobre 2025, l'entité est bloquée pour tout dépôt au RCS tant que les LNIN ne sont pas complets.
-              </div>
-            )}
-          </div>
+        <div style={{ height: 12 }} />
+        <div style={{ display: "flex", gap: 10 }}>
+          <Field label="Age" value="" onChange={() => {}} ph="54" w={0.5} />
+          <Field label="Sex" value="" onChange={() => {}} ph="F" w={0.5} />
+          <Field label="Phone" value="" onChange={() => {}} ph="98450…" icon={Phone} w={1.3} />
+        </div>
+        <div style={{ height: 12 }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 8, background: `${C.teal}12`, border: `1px dashed ${C.tealDim}`, borderRadius: 11, padding: "11px 13px" }}>
+          <Hash size={15} color={C.tealText} />
+          <span style={{ fontSize: 13, color: C.tealText, fontWeight: 600 }}>OP No. <b>OP-2406-118</b> auto-assigned · used for every revisit</span>
         </div>
 
-        {/* Persons */}
-        {entity.persons && entity.persons.length > 0 && (
-          <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>Dirigeants & Actionnaires</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              {entity.persons.map((p, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", background: i % 2 === 0 ? "#f9fafb" : "#fff", borderRadius: 6, fontSize: 13 }}>
-                  <div>
-                    <div style={{ fontWeight: 600, color: "#111827" }}>{p.name}</div>
-                    <div style={{ fontSize: 12, color: "#6b7280" }}>{p.role} · {p.nat}</div>
-                  </div>
-                  <span style={{
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: p.lnin === "✓" ? "#059669" : p.lnin === "⏳" ? "#d97706" : p.lnin === "✗" ? "#dc2626" : "#9ca3af"
-                  }}>
-                    LNIN {p.lnin}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Upcoming deadlines */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>Prochaines échéances</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <DeadlineRow label={entity.nextDeadline} days={entity.nextDeadlineDays} />
-            <DeadlineRow label="Confirmation annuelle RBE" days={entity.nextDeadlineDays + 45} />
-            <DeadlineRow label={entity.type === "SA" ? "Conseil d'Administration Q2" : "Conseil de Gérance Q2"} days={entity.nextDeadlineDays + 90} />
-          </div>
-        </div>
-
-        {/* Generate document */}
-        <button onClick={() => onGenerate(entity)} style={{
-          width: "100%",
-          padding: "14px",
-          background: "linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)",
-          color: "#fff",
-          border: "none",
-          borderRadius: 10,
-          fontSize: 14,
-          fontWeight: 700,
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 8,
-          boxShadow: "0 4px 14px rgba(37, 99, 235, 0.3)",
-          transition: "transform 0.15s",
-        }}
-        onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-1px)"}
-        onMouseOut={(e) => e.currentTarget.style.transform = "translateY(0)"}
-        >
-          ⚡ Générer PV du {entity.type === "SA" ? "Conseil d'Administration" : "Conseil de Gérance"}
-        </button>
-        <div style={{ textAlign: "center", fontSize: 11, color: "#9ca3af", marginTop: 8 }}>
-          Document généré par IA en français juridique · Révision humaine requise
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function DeadlineRow({ label, days }) {
-  const overdue = days < 0;
-  const soon = days >= 0 && days <= 30;
-  const color = overdue ? "#dc2626" : soon ? "#d97706" : "#059669";
-  const bg = overdue ? "#fef2f2" : soon ? "#fffbeb" : "#f0fdf4";
-  return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", background: bg, borderRadius: 8, fontSize: 13 }}>
-      <span style={{ fontWeight: 500, color: "#374151" }}>{label}</span>
-      <span style={{ fontWeight: 700, color, fontSize: 12, whiteSpace: "nowrap" }}>
-        {overdue ? `${Math.abs(days)}j en retard` : soon ? `${days}j restants` : `${days}j`}
-      </span>
-    </div>
-  );
-}
-
-// ============================================================
-// MAIN APP
-// ============================================================
-export default function LuxAdminDemo() {
-  const [selectedEntity, setSelectedEntity] = useState(null);
-  const [docEntity, setDocEntity] = useState(null);
-  const [filter, setFilter] = useState("all");
-  const [search, setSearch] = useState("");
-  const [currentView, setCurrentView] = useState("dashboard");
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => { setLoaded(true); }, []);
-
-  const entities = DEMO_DATA.entities.filter(e => {
-    if (filter !== "all" && e.status !== filter) return false;
-    if (search && !e.name.toLowerCase().includes(search.toLowerCase()) && !e.rcs.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
-
-  const stats = DEMO_DATA.stats;
-
-  return (
-    <div style={{ minHeight: "100vh", background: "#f8f9fb", fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif" }}>
-      <style>{`
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-        @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
-      `}</style>
-
-      {/* Header */}
-      <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1e40af 100%)", padding: "0 32px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 800 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 30, height: 30, background: "linear-gradient(135deg, #3b82f6, #60a5fa)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 800, color: "#fff" }}>L</div>
-            <span style={{ fontSize: 16, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>LuxAdmin</span>
-            <span style={{ fontSize: 10, padding: "2px 6px", background: "rgba(96,165,250,0.2)", color: "#93c5fd", borderRadius: 4, fontWeight: 600, letterSpacing: "0.05em" }}>BETA</span>
-          </div>
-          <div style={{ display: "flex", gap: 4 }}>
-            {[{ id: "dashboard", label: "Tableau de bord" }, { id: "entities", label: "Entités" }].map(tab => (
-              <button key={tab.id} onClick={() => setCurrentView(tab.id)} style={{
-                padding: "6px 14px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 500,
-                background: currentView === tab.id ? "rgba(255,255,255,0.15)" : "transparent",
-                color: currentView === tab.id ? "#fff" : "rgba(255,255,255,0.6)",
-                transition: "all 0.2s",
-              }}>{tab.label}</button>
-            ))}
-          </div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>Fiduciaire Pilote S.A.</div>
-          <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 600, color: "#fff" }}>MD</div>
-        </div>
-      </div>
-
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 32px" }}>
-        {/* Demo disclaimer banner — prominent, always visible */}
-        <div style={{
-          padding: "10px 16px",
-          background: "linear-gradient(90deg, #eff6ff 0%, #f0f9ff 100%)",
-          borderRadius: 10,
-          border: "1px solid #bfdbfe",
-          marginBottom: 20,
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          fontSize: 13,
-          color: "#1e40af",
-        }}>
-          <span style={{ fontSize: 16 }}>ℹ️</span>
-          <span>
-            <strong>Démonstration interactive</strong> — Toutes les données présentées sont fictives. Aucune donnée personnelle n'est collectée ni stockée.
-            Les noms d'entités, personnes et numéros RCS sont inventés à des fins d'illustration uniquement.
-          </span>
-        </div>
-
-        {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, marginBottom: 28 }}>
-          <StatCard delay={0} label="Entités actives" value={stats.activeEntities} sub={`sur ${stats.totalEntities} au total`} />
-          <StatCard delay={80} label="En retard" value={stats.overdue} sub={`+ ${stats.dueSoon} échéances proches`} color="#dc2626" />
-          <StatCard delay={160} label="Exposition pénalités" value={formatEur(stats.penaltyExposureCents)} sub="Loi du 23 janvier 2025" accent="#dc2626" />
-          <StatCard delay={240} label="LNIN prêt" value={`${stats.lninReadyPercent}%`} sub={`${stats.lninBlockedEntities} entités bloquées`} color={stats.lninReadyPercent < 80 ? "#d97706" : "#059669"} />
-        </div>
-
-        {/* Penalty alert banner */}
-        {stats.penaltyExposureCents > 0 && (
-          <div style={{
-            padding: "16px 20px",
-            background: "linear-gradient(90deg, #fef2f2 0%, #fff1f2 100%)",
-            borderRadius: 12,
-            border: "1px solid #fecaca",
-            marginBottom: 24,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            opacity: loaded ? 1 : 0,
-            transform: loaded ? "translateY(0)" : "translateY(8px)",
-            transition: "all 0.6s ease 0.4s",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span style={{ fontSize: 24, animation: "pulse 2s infinite" }}>⚠️</span>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "#991b1b" }}>
-                  Exposition pénalités : {formatEur(stats.penaltyExposureCents)}
-                </div>
-                <div style={{ fontSize: 12, color: "#b91c1c" }}>
-                  {stats.overdue} dépôts en retard au RCS. {2} entités en régime de pénalités journalières (€40/jour). Action immédiate requise.
-                </div>
-              </div>
-            </div>
-            <button style={{ padding: "8px 16px", background: "#dc2626", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
-              Voir les urgences
-            </button>
-          </div>
-        )}
-
-        {/* Filter bar */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
-          <div style={{ display: "flex", gap: 6 }}>
-            {[
-              { id: "all", label: "Toutes", count: DEMO_DATA.entities.length },
-              { id: "overdue", label: "En retard", count: DEMO_DATA.entities.filter(e => e.status === "overdue").length },
-              { id: "due_soon", label: "Échéance proche", count: DEMO_DATA.entities.filter(e => e.status === "due_soon").length },
-              { id: "on_track", label: "En ordre", count: DEMO_DATA.entities.filter(e => e.status === "on_track").length },
-            ].map(f => (
-              <button key={f.id} onClick={() => setFilter(f.id)} style={{
-                padding: "6px 14px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
-                background: filter === f.id ? "#111827" : "#f3f4f6",
-                color: filter === f.id ? "#fff" : "#6b7280",
-                transition: "all 0.2s",
-              }}>
-                {f.label} <span style={{ opacity: 0.6, marginLeft: 4 }}>{f.count}</span>
-              </button>
-            ))}
-          </div>
-          <input
-            type="text"
-            placeholder="Rechercher entité ou RCS..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 13, width: 240, outline: "none", background: "#fff" }}
-          />
-        </div>
-
-        {/* Entity table */}
-        <div style={{ background: "#fff", borderRadius: 12, boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)", overflow: "hidden" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "2.5fr 0.6fr 2fr 1fr 0.8fr 1fr", padding: "12px 20px", background: "#f9fafb", fontSize: 11, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: "1px solid #e5e7eb" }}>
-            <div>Entité</div>
-            <div>Forme</div>
-            <div>Prochaine échéance</div>
-            <div>Statut</div>
-            <div>LNIN</div>
-            <div style={{ textAlign: "right" }}>Pénalité</div>
-          </div>
-          {entities.map((entity, i) => (
-            <div
-              key={entity.id}
-              onClick={() => setSelectedEntity(entity)}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "2.5fr 0.6fr 2fr 1fr 0.8fr 1fr",
-                padding: "14px 20px",
-                borderBottom: i < entities.length - 1 ? "1px solid #f3f4f6" : "none",
-                cursor: "pointer",
-                transition: "background 0.15s",
-                alignItems: "center",
-                opacity: loaded ? 1 : 0,
-                transform: loaded ? "translateY(0)" : "translateY(6px)",
-                transitionDelay: `${0.05 * i}s`,
-              }}
-              onMouseOver={(e) => e.currentTarget.style.background = "#f9fafb"}
-              onMouseOut={(e) => e.currentTarget.style.background = "transparent"}
-            >
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>{entity.name}</div>
-                <div style={{ fontSize: 12, color: "#9ca3af" }}>RCS {entity.rcs} · {entity.assigned}</div>
-              </div>
-              <div><TypeBadge type={entity.type} /></div>
-              <div>
-                <div style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{entity.nextDeadline}</div>
-                <div style={{ fontSize: 12, color: entity.nextDeadlineDays < 0 ? "#dc2626" : entity.nextDeadlineDays <= 30 ? "#d97706" : "#6b7280", fontWeight: entity.nextDeadlineDays < 0 ? 700 : 400 }}>
-                  {entity.nextDeadlineDays < 0 ? `${Math.abs(entity.nextDeadlineDays)}j en retard` : `${entity.nextDeadlineDays}j restants`}
-                </div>
-              </div>
-              <div><StatusBadge status={entity.status} /></div>
-              <div><LninBadge ready={entity.lninReady} total={entity.lninTotal} verified={entity.lninVerified} /></div>
-              <div style={{ textAlign: "right" }}>
-                {entity.penalty > 0 ? (
-                  <span style={{ fontSize: 14, fontWeight: 700, color: "#dc2626" }}>
-                    €{entity.penalty}{entity.penaltyDaily ? <span style={{ fontSize: 10, fontWeight: 400 }}> +40/j</span> : ""}
-                  </span>
-                ) : (
-                  <span style={{ fontSize: 13, color: "#d1d5db" }}>—</span>
-                )}
+        <div style={{ height: 22 }} />
+        <Sec>Vitals</Sec>
+        <div style={{ height: 10 }} />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          {vit.map((x) => (
+            <div key={x.k}>
+              <div style={{ fontSize: 10.5, color: C.faint, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 5, display: "flex", alignItems: "center", gap: 5 }}><x.icon size={12} />{x.label}</div>
+              <div style={{ display: "flex", alignItems: "center", background: C.surfaceHi, border: `1px solid ${C.border}`, borderRadius: 11, padding: "10px 12px" }}>
+                <input value={v[x.k]} onChange={(e) => set(x.k)(e.target.value)} placeholder={x.ph} style={{ flex: 1, minWidth: 0, background: "none", border: "none", outline: "none", color: C.text, fontSize: 15, fontWeight: 600, fontFamily: FONT }} />
+                <span style={{ fontSize: 11, color: C.faint }}>{x.suf}</span>
               </div>
             </div>
           ))}
         </div>
 
-        {entities.length === 0 && (
-          <div style={{ textAlign: "center", padding: 40, color: "#9ca3af", fontSize: 14 }}>
-            Aucune entité ne correspond à votre recherche.
-          </div>
-        )}
+        <div style={{ height: 24 }} />
+        <Btn primary full icon={Mic} onClick={() => go("scribe", { name: name || "Lakshmi Narayan", age: 54, sex: "F", vitals: v.bp ? v : QUEUE_SEED[0].vitals })}>Start Scribing</Btn>
+        <div style={{ height: 10 }} />
+        <div style={{ textAlign: "center", fontSize: 12, color: C.faint }}>Vitals are optional — you can dictate them too.</div>
+      </div>
+    </div>
+  );
+}
 
-        {/* Footer */}
-        <div style={{ textAlign: "center", padding: "32px 0 16px", fontSize: 12, color: "#9ca3af" }}>
-          <strong style={{ color: "#6b7280" }}>LuxAdmin</strong> · Administration corporate intelligente pour fiduciaires luxembourgeois
-          <br />
-          Données 100% fictives · Aucune donnée personnelle collectée · Conforme RGPD
-          <br />
-          <span style={{ fontSize: 11 }}>IA rédige, l'humain décide · Aucun dépôt automatique au RCS</span>
+/* ============ LIVE SCRIBE (the core moment) ============ */
+function Scribe({ patient, tier, go }) {
+  const [rec, setRec] = useState(false);
+  const [done, setDone] = useState(false);
+  const [lines, setLines] = useState([]);
+  const [fields, setFields] = useState({ cc: false, hpi: false, exam: false, dx: false, rx: false });
+  const [secs, setSecs] = useState(0);
+  const timers = useRef([]);
+  const scrollRef = useRef(null);
+
+  useEffect(() => { if (rec) { const i = setInterval(() => setSecs((s) => s + 1), 1000); return () => clearInterval(i); } }, [rec]);
+  useEffect(() => { scrollRef.current?.scrollTo({ top: 9999, behavior: "smooth" }); }, [lines]);
+
+  const start = () => {
+    setRec(true); setLines([]); setDone(false);
+    setFields({ cc: false, hpi: false, exam: false, dx: false, rx: false });
+    SCRIBE_LINES.forEach((ln, i) => timers.current.push(setTimeout(() => setLines((p) => [...p, ln]), 1100 * (i + 1))));
+    const fk = ["cc", "hpi", "exam", "dx", "rx"];
+    fk.forEach((k, i) => timers.current.push(setTimeout(() => setFields((p) => ({ ...p, [k]: true })), 1500 + 1200 * i)));
+  };
+  const stop = () => { timers.current.forEach(clearTimeout); setRec(false); setDone(true); setFields({ cc: true, hpi: true, exam: true, dx: true, rx: true }); };
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+
+  const mm = String(Math.floor(secs / 60)).padStart(2, "0"), ss = String(secs % 60).padStart(2, "0");
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <TopBar title="" onBack={() => go(tier === "solo" ? "dash" : "queue")} right={
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 800 }}>{patient?.name}</div>
+            <div style={{ fontSize: 12.5, color: C.dim }}>{patient?.age}/{patient?.sex} · BP {patient?.vitals?.bp} · {patient?.vitals?.temp}°F</div>
+          </div>
+          {rec && <Chip color={C.red} bg={C.redBg}><span style={{ width: 7, height: 7, borderRadius: 99, background: C.red }} />REC {mm}:{ss}</Chip>}
+        </div>} />
+
+      {/* live transcript */}
+      <div ref={scrollRef} style={{ flex: "0 0 38%", overflowY: "auto", padding: "14px 18px", background: C.bg }}>
+        <Sec>Live Transcript {tier !== "solo" && "· EN/HI"}</Sec>
+        {lines.length === 0 && !rec && <div style={{ color: C.faint, fontSize: 13.5, marginTop: 30, textAlign: "center" }}>Press record. LIET listens to the consultation and builds the note in real time.</div>}
+        <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 9 }}>
+          {lines.map((l, i) => (
+            <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+              <span style={{ fontSize: 10, fontWeight: 800, color: l.who === "dr" ? C.tealText : C.violet, marginTop: 2, minWidth: 26 }}>{l.who === "dr" ? "DR" : "PT"}</span>
+              <span style={{ fontSize: 13.5, color: C.text, lineHeight: 1.45 }}>{l.t}</span>
+            </div>
+          ))}
+          {rec && <div style={{ display: "flex", gap: 4, paddingLeft: 34 }}>{[0, 1, 2].map((d) => <span key={d} style={{ width: 6, height: 6, borderRadius: 99, background: C.teal, animation: `pulse 1s ${d * 0.2}s infinite` }} />)}</div>}
         </div>
       </div>
 
-      {/* Entity detail panel */}
-      {selectedEntity && (
-        <>
-          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.2)", zIndex: 850 }} onClick={() => setSelectedEntity(null)} />
-          <EntityDetail entity={selectedEntity} onClose={() => setSelectedEntity(null)} onGenerate={(e) => { setDocEntity(e); }} />
-        </>
-      )}
+      {/* structured note forming */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "14px 18px", background: C.surface, borderTop: `1px solid ${C.border}` }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Sec>Structured Note</Sec>
+          {done && <Chip color={C.green} sm><CheckCircle2 size={11} />Drafted</Chip>}
+        </div>
+        <NoteRow show={fields.cc} label="Chief complaint" val={RX_DRAFT.cc} />
+        <NoteRow show={fields.hpi} label="History" val={RX_DRAFT.hpi} />
+        <NoteRow show={fields.exam} label="Examination" val={RX_DRAFT.exam} />
+        <NoteRow show={fields.dx} label="Diagnosis" val={RX_DRAFT.dx.join(" · ")} accent />
+        {fields.rx && (
+          <div style={{ marginTop: 12, opacity: 0, animation: "fade .4s forwards" }}>
+            <div style={{ fontSize: 10.5, color: C.faint, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>Rx · {RX_DRAFT.rx.length} drugs</div>
+            {RX_DRAFT.rx.map((d, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, background: C.surfaceHi, borderRadius: 9, padding: "8px 11px", marginBottom: 6 }}>
+                <div style={{ flex: 1 }}><div style={{ fontSize: 13.5, fontWeight: 700 }}>{d.drug}</div><div style={{ fontSize: 11.5, color: C.dim }}>{d.dose} · {d.freq} · {d.dur}{d.note && ` · ${d.note}`}</div></div>
+                <Pencil size={13} color={C.faint} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
-      {/* Document modal */}
-      {docEntity && <DocumentModal entity={docEntity} onClose={() => setDocEntity(null)} />}
+      {/* controls */}
+      <div style={{ padding: "14px 18px", borderTop: `1px solid ${C.border}`, background: C.bg }}>
+        {!rec && !done && <Btn primary full icon={Mic} onClick={start}>Record Consultation</Btn>}
+        {rec && (
+          <div style={{ display: "flex", gap: 10 }}>
+            <Btn ghost icon={Pause} onClick={() => setRec(false)}>Pause</Btn>
+            <Btn danger full icon={Square} onClick={stop}>Stop & Generate</Btn>
+          </div>
+        )}
+        {done && (
+          <div style={{ display: "flex", gap: 10 }}>
+            {tier === "hospital" && <Btn ghost icon={Save} onClick={() => go("dash", { ...patient, draft: true, dx: RX_DRAFT.dx })}>Save draft</Btn>}
+            <Btn primary full icon={FileText} onClick={() => go("rx", { ...patient, dx: RX_DRAFT.dx })}>Review Prescription</Btn>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+const NoteRow = ({ show, label, val, accent }) => !show ? null : (
+  <div style={{ marginTop: 12, opacity: 0, animation: "fade .4s forwards" }}>
+    <div style={{ fontSize: 10.5, color: C.faint, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 3 }}>{label}</div>
+    <div style={{ fontSize: 13.5, color: accent ? C.tealText : C.text, fontWeight: accent ? 700 : 500, lineHeight: 1.5 }}>{val}</div>
+  </div>
+);
+
+/* ============ RX PREVIEW + PRINT ============ */
+function RxPreview({ patient, go, finalize }) {
+  const [printed, setPrinted] = useState(false);
+  return (
+    <div>
+      <TopBar title="Prescription" onBack={() => go("dash")} right={<Chip color={C.green} sm><Layers size={11} />v1</Chip>} />
+      <div style={{ padding: 18 }}>
+        <div style={{ background: "#fbfdfd", borderRadius: 14, padding: 20, color: "#0a1416", fontFamily: "'Georgia', serif", boxShadow: "0 10px 30px rgba(0,0,0,0.4)" }}>
+          <div style={{ borderBottom: "2px solid #0c7a6e", paddingBottom: 10, marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "#0c5249" }}>Dr. K Karthik</div>
+              <div style={{ fontSize: 11.5, color: "#456" }}>MD General Medicine · Reg. KMC 118042</div>
+              <div style={{ fontSize: 11.5, color: "#456" }}>Apollo BGS Hospital, Mysuru</div>
+            </div>
+            <div style={{ fontSize: 11, color: "#678", textAlign: "right" }}>OP-2406-118<br />24 Jun 2026</div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
+            <span><b>{patient?.name}</b> · {patient?.age}/{patient?.sex}</span>
+            <span>BP {patient?.vitals?.bp || "148/92"} · {patient?.vitals?.temp || "98.4"}°F</span>
+          </div>
+          <div style={{ fontSize: 11.5, color: "#456", marginBottom: 10, fontStyle: "italic" }}>Dx: {(patient?.dx || RX_DRAFT.dx).join(", ")}</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: "#0c5249", marginBottom: 4 }}>℞</div>
+          {RX_DRAFT.rx.map((d, i) => (
+            <div key={i} style={{ marginBottom: 9 }}>
+              <div style={{ fontSize: 14, fontWeight: 700 }}>{i + 1}. {d.drug}</div>
+              <div style={{ fontSize: 12, color: "#345", paddingLeft: 14 }}>{d.dose} — {d.freq} — {d.dur} {d.note && `(${d.note})`}</div>
+            </div>
+          ))}
+          <div style={{ borderTop: "1px solid #cdd", marginTop: 10, paddingTop: 8 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#678", marginBottom: 3 }}>ADVICE</div>
+            {RX_DRAFT.advice.map((a, i) => <div key={i} style={{ fontSize: 11.5, color: "#345" }}>• {a}</div>)}
+          </div>
+          <div style={{ textAlign: "right", marginTop: 18, fontSize: 11, color: "#678" }}>Digitally signed · Dr. K Karthik</div>
+        </div>
+
+        <div style={{ height: 16 }} />
+        {printed && <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 12, color: C.green, fontSize: 13.5, fontWeight: 600 }}><CheckCircle2 size={16} />Sent to OPD-Printer-01 · also on patient's WhatsApp</div>}
+        <div style={{ display: "flex", gap: 10 }}>
+          <Btn ghost icon={Pencil}>Edit</Btn>
+          <Btn primary full icon={Printer} onClick={() => { setPrinted(true); finalize?.({ ...patient, dx: patient?.dx || RX_DRAFT.dx }); }}>Print & Finalise</Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============ MULTI-SPECIALTY: PATIENT TIMELINE ============ */
+function Timeline({ patient, go }) {
+  const [labOpen, setLabOpen] = useState(false);
+  return (
+    <div>
+      <TopBar title="Patient Record" onBack={() => go("dash")} right={<button onClick={() => setLabOpen(true)} style={{ background: `${C.blue}1a`, border: `1px solid ${C.blue}40`, borderRadius: 10, padding: "7px 11px", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, color: C.blue, fontSize: 12.5, fontWeight: 700 }}><FlaskConical size={14} />Labs</button>} />
+      <div style={{ padding: 18 }}>
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 16 }}>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <div>
+              <div style={{ fontSize: 19, fontWeight: 800 }}>{patient?.name}</div>
+              <div style={{ color: C.dim, fontSize: 13, marginTop: 2 }}>{patient?.age}/{patient?.sex} · {patient?.uhid}</div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <Chip color={C.violet} sm><History size={11} />4 visits</Chip>
+              <div style={{ fontSize: 11, color: C.faint, marginTop: 6 }}>{patient?.phone}</div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ height: 18 }} />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Sec>Longitudinal History · all departments</Sec>
+          <Chip color={C.amber} sm><ShieldCheck size={11} />access-aware</Chip>
+        </div>
+        <div style={{ height: 12 }} />
+        <div style={{ position: "relative", paddingLeft: 22 }}>
+          <div style={{ position: "absolute", left: 6, top: 6, bottom: 6, width: 2, background: C.border }} />
+          {TIMELINE.map((v, i) => (
+            <div key={i} style={{ position: "relative", marginBottom: 14 }}>
+              <div style={{ position: "absolute", left: -22, top: 14, width: 12, height: 12, borderRadius: 99, background: v.you ? C.teal : v.locked ? C.surfaceTop : C.surfaceHi, border: `2px solid ${v.you ? C.teal : C.border}`, boxShadow: v.you ? `0 0 8px ${C.teal}` : "none" }} />
+              <div style={{ background: v.locked ? C.bg : C.surface, border: `1px solid ${v.locked ? C.border : v.you ? C.tealDim : C.border}`, borderRadius: 13, padding: 13, opacity: v.locked ? 0.78 : 1 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 12.5, fontWeight: 700, color: v.you ? C.tealText : C.text }}>{v.dept}{v.you && " · this visit"}</span>
+                  {v.locked ? <Lock size={14} color={C.faint} /> : <span style={{ fontSize: 11, color: C.faint }}>{v.date}</span>}
+                </div>
+                <div style={{ fontSize: 13, color: v.locked ? C.faint : C.dim, marginTop: 4 }}>{v.dx}</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
+                  <span style={{ fontSize: 11.5, color: C.faint }}>{v.doc}</span>
+                  {v.locked && <button style={{ background: "none", border: "none", color: C.blue, fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}>Request access →</button>}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ height: 6 }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 8, background: `${C.teal}10`, border: `1px solid ${C.tealDim}`, borderRadius: 11, padding: "10px 13px", marginBottom: 14 }}>
+          <Unlock size={15} color={C.tealText} />
+          <span style={{ fontSize: 12, color: C.tealText, flex: 1 }}>You can restrict <b>your</b> notes from other departments in Settings.</span>
+        </div>
+        <Btn primary full icon={Mic} onClick={() => go("scribe", patient)}>Start Consultation</Btn>
+      </div>
+
+      {labOpen && <LabSheet onClose={() => setLabOpen(false)} />}
+    </div>
+  );
+}
+
+/* ============ LAB RESULTS SHEET ============ */
+function LabSheet({ onClose }) {
+  return (
+    <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-end", zIndex: 20 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", background: C.surface, borderRadius: "22px 22px 0 0", border: `1px solid ${C.border}`, padding: 18, maxHeight: "80%", overflowY: "auto" }}>
+        <div style={{ width: 38, height: 4, borderRadius: 99, background: C.borderHi, margin: "0 auto 14px" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+          <FlaskConical size={18} color={C.blue} />
+          <span style={{ fontSize: 17, fontWeight: 800 }}>Lab Results</span>
+          <Chip color={C.green} sm>resulted today</Chip>
+        </div>
+        <div style={{ fontSize: 12.5, color: C.dim, marginBottom: 14 }}>Auto-pulled from hospital LIS · attaches to this consultation</div>
+        {LABS.map((l, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", background: l.flag ? `${l.flag === "H" ? C.red : C.blue}10` : C.surfaceHi, border: `1px solid ${l.flag ? `${l.flag === "H" ? C.red : C.blue}30` : C.border}`, borderRadius: 11, marginBottom: 8 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 700 }}>{l.test}</div>
+              <div style={{ fontSize: 11.5, color: C.faint }}>Ref: {l.ref}</div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: l.flag === "H" ? C.red : l.flag === "L" ? C.blue : C.text }}>{l.val} <span style={{ fontSize: 11, color: C.faint, fontWeight: 500 }}>{l.unit}</span></div>
+              {l.flag && <Chip color={l.flag === "H" ? C.red : C.blue} sm>{l.flag === "H" ? "HIGH" : "LOW"}</Chip>}
+            </div>
+          </div>
+        ))}
+        <div style={{ height: 8 }} />
+        <Btn primary full icon={CheckCircle2} onClick={onClose}>Attach & continue</Btn>
+      </div>
+    </div>
+  );
+}
+
+/* ============ RECEPTION DESK ============ */
+function Reception({ tier, queue, addToQueue }) {
+  useTicker();
+  const [tab, setTab] = useState("queue");
+  const [q, setQ] = useState("");
+  const found = q.length > 2;
+  const tabs = [["queue", "Live Queue", Users], ["appts", "Appointments", Calendar], ["reg", "Register / Search", Search]];
+  return (
+    <div style={{ display: "flex", height: "100%" }}>
+      {/* rail */}
+      <div style={{ width: 188, borderRight: `1px solid ${C.border}`, padding: 14, background: C.surface }}>
+        {tabs.map(([k, label, Icon]) => (
+          <button key={k} onClick={() => setTab(k)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "11px 12px", marginBottom: 6, borderRadius: 11, border: "none", cursor: "pointer", fontFamily: FONT, fontSize: 13.5, fontWeight: 700, textAlign: "left", color: tab === k ? "#04201d" : C.dim, background: tab === k ? `linear-gradient(180deg, ${C.teal}, ${C.tealDim})` : "transparent" }}>
+            <Icon size={17} />{label}
+          </button>
+        ))}
+        <div style={{ marginTop: 18, padding: 12, background: C.surfaceHi, borderRadius: 12, border: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: 11, color: C.faint, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6 }}>Now serving</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: C.tealText, marginTop: 4 }}>A-11</div>
+          <div style={{ fontSize: 12, color: C.dim }}>Dr. Karthik · Rm 4</div>
+        </div>
+      </div>
+
+      {/* main */}
+      <div style={{ flex: 1, padding: 18, overflowY: "auto" }}>
+        {tab === "queue" && (
+          <>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <span style={{ fontSize: 18, fontWeight: 800 }}>Today · {queue.length} waiting</span>
+              <Btn primary sm icon={Plus} onClick={() => setTab("reg")}>Add patient</Btn>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "26px 1fr 130px 90px", padding: "0 12px 8px", fontSize: 10.5, color: C.faint, fontWeight: 800, textTransform: "uppercase", letterSpacing: 0.6 }}>
+              <span>#</span><span>Patient</span><span>Doctor</span><span style={{ textAlign: "right" }}>Waiting</span>
+            </div>
+            {queue.map((p) => (
+              <div key={p.id} style={{ display: "grid", gridTemplateColumns: "26px 1fr 130px 90px", alignItems: "center", padding: "12px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, marginBottom: 8 }}>
+                <span style={{ fontWeight: 800, color: C.tealText, fontSize: 13 }}>{p.token}</span>
+                <div><div style={{ fontWeight: 700, fontSize: 14 }}>{p.name}</div><div style={{ fontSize: 11.5, color: C.dim }}>{p.uhid} · {p.reason}</div></div>
+                <span style={{ fontSize: 13, color: C.dim }}>Dr. Karthik</span>
+                <div style={{ textAlign: "right" }}><Chip color={waitColor(p.arrivedMin)} sm><Clock size={11} />{p.arrivedMin} min</Chip></div>
+              </div>
+            ))}
+            <div style={{ fontSize: 12, color: C.faint, marginTop: 10, textAlign: "center" }}>Wait time ticks live from arrival · green &lt;10m · amber 10–20m · red &gt;20m</div>
+          </>
+        )}
+
+        {tab === "appts" && (
+          <>
+            <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 14 }}>Appointments · 24 Jun</div>
+            {[["09:00", "Lakshmi Narayan", "arrived", C.green], ["09:30", "Rahul Mehta", "arrived", C.green], ["10:00", "Fatima Bi", "arrived", C.green], ["10:30", "Suresh Kumar", "booked", C.dim], ["11:00", "Anjali Pillai", "booked", C.dim]].map(([t, n, s, col], i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: 14, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, marginBottom: 8 }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: C.tealText, minWidth: 50 }}>{t}</div>
+                <div style={{ flex: 1, fontWeight: 700, fontSize: 14.5 }}>{n}</div>
+                <Chip color={col} sm>{s === "arrived" ? "Checked in" : "Booked"}</Chip>
+                {s === "booked" && <Btn ghost sm onClick={() => addToQueue(n)}>Check in</Btn>}
+              </div>
+            ))}
+            <div style={{ height: 14 }} />
+            <Btn primary icon={Plus}>New appointment</Btn>
+          </>
+        )}
+
+        {tab === "reg" && (
+          <>
+            <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 6 }}>Find or register patient</div>
+            <div style={{ fontSize: 13, color: C.dim, marginBottom: 14 }}>Search by phone or name. New patient gets a permanent UHID, mapped for every future visit.</div>
+            <Field value={q} onChange={setQ} ph="Phone number or name…" icon={Search} />
+            <div style={{ height: 16 }} />
+            {!found ? (
+              <div style={{ background: C.surface, border: `1px dashed ${C.border}`, borderRadius: 14, padding: "30px 20px", textAlign: "center", color: C.faint, fontSize: 13.5 }}>Type 3+ characters to search the registry.</div>
+            ) : (
+              <>
+                <Sec>Existing match</Sec>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, padding: 14, background: C.surface, border: `1px solid ${C.tealDim}`, borderRadius: 13, marginTop: 10, marginBottom: 16 }}>
+                  <div style={{ width: 42, height: 42, borderRadius: 11, background: `${C.teal}1a`, display: "grid", placeItems: "center" }}><User size={20} color={C.tealText} /></div>
+                  <div style={{ flex: 1 }}><div style={{ fontWeight: 700, fontSize: 15 }}>Lakshmi Narayan</div><div style={{ fontSize: 12.5, color: C.dim }}>APL-26-04821 · 54/F · last visit 02 Jun</div></div>
+                  <Btn primary sm icon={ArrowRight} onClick={() => addToQueue("Lakshmi Narayan")}>Send to queue</Btn>
+                </div>
+                <Sec>Not the right person?</Sec>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, padding: 14, background: `${C.teal}10`, border: `1px dashed ${C.tealDim}`, borderRadius: 13, marginTop: 10 }}>
+                  <Plus size={20} color={C.tealText} />
+                  <div style={{ flex: 1 }}><div style={{ fontWeight: 700, fontSize: 14, color: C.tealText }}>Register new patient</div><div style={{ fontSize: 12, color: C.dim }}>New UHID <b>APL-26-04824</b> will be generated</div></div>
+                  <Btn ghost sm>Create</Btn>
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ============ BOTTOM NAV (phone) ============ */
+const BottomNav = () => (
+  <div style={{ display: "flex", justifyContent: "space-around", padding: "10px 0 14px", borderTop: `1px solid ${C.border}`, background: C.surface }}>
+    {[["Home", User, true], ["Patients", Users], ["Help", Circle], ["Settings", ShieldCheck]].map(([l, I, on], i) => (
+      <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: on ? C.teal : C.faint }}>
+        <I size={19} />
+        <span style={{ fontSize: 10.5, fontWeight: on ? 700 : 500 }}>{l}</span>
+      </div>
+    ))}
+  </div>
+);
+
+/* ============ APP SHELL ============ */
+const TIERS = [
+  { k: "solo", label: "Solo Clinic", icon: User, sub: "1 doctor · walk-in · print on the spot" },
+  { k: "clinic", label: "Multi-Doctor", icon: Building2, sub: "reception · UHID · live queue + timers" },
+  { k: "hospital", label: "Multi-Specialty", icon: Hospital, sub: "+ longitudinal · access locks · labs · drafts" },
+];
+
+export default function App() {
+  const [tier, setTier] = useState("solo");
+  const [role, setRole] = useState("doctor");
+  const [screen, setScreen] = useState("dash");
+  const [cur, setCur] = useState(null);
+  const [today, setToday] = useState([]);
+  const [queue, setQueue] = useState(QUEUE_SEED);
+
+  const go = (s, patient) => { if (patient) setCur(patient); if (s === "dash" && patient?.draft) setToday((t) => [{ ...patient }, ...t.filter((x) => x.name !== patient.name)]); setScreen(s); };
+  const finalize = (p) => { setToday((t) => [{ ...p, draft: false }, ...t.filter((x) => x.name !== p.name)]); setQueue((qx) => qx.filter((x) => x.name !== p.name)); };
+  const addToQueue = (name) => { if (!queue.find((x) => x.name === name)) setQueue((qx) => [...qx, { id: "n" + Date.now(), name, uhid: "APL-26-0482" + (qx.length + 4), age: 45, sex: "M", phone: "98xxx", token: "A-" + (15 + qx.length), arrivedMin: 0, dept: "General Medicine", reason: "walk-in", vitals: QUEUE_SEED[0].vitals }]); };
+
+  const reset = (t) => { setTier(t); setScreen(t === "solo" ? "dash" : role === "reception" ? "desk" : "dash"); };
+  const setR = (r) => { setRole(r); setScreen(r === "reception" ? "desk" : "dash"); };
+
+  const screenLabel = { dash: "Doctor — Home", capture: "Doctor — New patient", queue: "Doctor — Live queue", scribe: "Doctor — Live scribe", rx: "Doctor — Prescription", timeline: "Doctor — Patient record", desk: "Reception — Front desk" }[screen];
+
+  const renderDoctor = () => {
+    if (screen === "capture") return <Capture go={go} />;
+    if (screen === "scribe") return <Scribe patient={cur || QUEUE_SEED[0]} tier={tier} go={go} />;
+    if (screen === "rx") return <RxPreview patient={cur} go={go} finalize={finalize} />;
+    if (screen === "timeline") return <Timeline patient={cur || QUEUE_SEED[0]} go={go} />;
+    if (screen === "queue") return <div><TopBar title="Live Queue" onBack={() => go("dash")} /><div style={{ padding: 18 }}><DoctorDash tier={tier === "solo" ? "clinic" : tier} today={[]} queue={queue} go={go} /></div></div>;
+    return (<><DoctorDash tier={tier} today={today} queue={queue} go={go} /><BottomNav /></>);
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: `radial-gradient(1200px 600px at 50% -10%, #0c1517, ${C.bg})`, fontFamily: FONT, color: C.text, padding: "26px 18px 50px" }}>
+      <style>{`@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}@keyframes fade{to{opacity:1}}@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');*{box-sizing:border-box}::-webkit-scrollbar{width:0}`}</style>
+
+      {/* header */}
+      <div style={{ maxWidth: 880, margin: "0 auto 20px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 4 }}>
+          <div style={{ width: 34, height: 34, borderRadius: 9, background: `linear-gradient(135deg, ${C.teal}, ${C.tealDim})`, display: "grid", placeItems: "center" }}><Stethoscope size={19} color="#04201d" /></div>
+          <div>
+            <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: -0.3 }}>LIET — EMR + Scribe</div>
+            <div style={{ fontSize: 12.5, color: C.dim }}>One app, three deployment tiers. Same scribe core, progressively unlocked.</div>
+          </div>
+        </div>
+      </div>
+
+      {/* CONTROL DECK */}
+      <div style={{ maxWidth: 880, margin: "0 auto 22px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: 16 }}>
+        <div style={{ fontSize: 11, color: C.faint, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Deployment tier</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
+          {TIERS.map((t) => {
+            const on = tier === t.k;
+            return (
+              <button key={t.k} onClick={() => reset(t.k)} style={{ textAlign: "left", padding: 13, borderRadius: 13, cursor: "pointer", fontFamily: FONT, border: `1px solid ${on ? C.tealDim : C.border}`, background: on ? `${C.teal}14` : C.surfaceHi, transition: "all .15s" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+                  <t.icon size={17} color={on ? C.tealText : C.dim} />
+                  <span style={{ fontSize: 14, fontWeight: 800, color: on ? C.tealText : C.text }}>{t.label}</span>
+                </div>
+                <div style={{ fontSize: 11.5, color: C.dim, lineHeight: 1.35 }}>{t.sub}</div>
+              </button>
+            );
+          })}
+        </div>
+        {tier !== "solo" && (
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 11, color: C.faint, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1 }}>View as</span>
+            {[["doctor", "Doctor", Stethoscope], ["reception", "Reception", ClipboardList]].map(([k, l, I]) => (
+              <button key={k} onClick={() => setR(k)} style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 14px", borderRadius: 10, cursor: "pointer", fontFamily: FONT, fontSize: 13, fontWeight: 700, border: `1px solid ${role === k ? C.tealDim : C.border}`, color: role === k ? C.tealText : C.dim, background: role === k ? `${C.teal}14` : "transparent" }}>
+                <I size={15} />{l}
+              </button>
+            ))}
+            <span style={{ marginLeft: "auto", fontSize: 12, color: C.faint }}>{screenLabel}</span>
+          </div>
+        )}
+        {tier === "solo" && <div style={{ fontSize: 12, color: C.faint }}>Solo mode has no reception layer — the doctor (or a shared device) captures everything. {screenLabel && `· ${screenLabel}`}</div>}
+      </div>
+
+      {/* STAGE */}
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        {role === "reception" && tier !== "solo"
+          ? <Desk><Reception tier={tier} queue={queue} addToQueue={addToQueue} /></Desk>
+          : <PhoneFrame>{renderDoctor()}</PhoneFrame>}
+      </div>
+
+      {/* legend */}
+      <div style={{ maxWidth: 880, margin: "26px auto 0", display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+        {[
+          "Solo: New Consultation → capture + vitals → scribe → print",
+          "Multi-Doctor: Reception registers → queue → doctor taps name → scribe",
+          "Multi-Specialty: tap patient → timeline + labs → save draft → finalise",
+        ].map((s, i) => (
+          <span key={i} style={{ fontSize: 12, color: C.dim, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 99, padding: "6px 13px" }}>{s}</span>
+        ))}
+      </div>
     </div>
   );
 }
